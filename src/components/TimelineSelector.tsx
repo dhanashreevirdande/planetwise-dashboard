@@ -17,8 +17,9 @@ const TimelineSelector = ({ minYear, maxYear, onChange }: TimelineSelectorProps)
   const lastUpdateTimeRef = useRef<number>(0);
 
   const handleYearChange = (value: number[]) => {
-    setCurrentYear(value[0]);
-    onChange(value[0]);
+    const newYear = value[0];
+    setCurrentYear(newYear);
+    onChange(newYear);
   };
 
   const togglePlayback = () => {
