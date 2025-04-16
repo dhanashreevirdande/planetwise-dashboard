@@ -1,6 +1,199 @@
-import React, { useState, useEffect } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CircleCheck, AlertCircle, CircleX } from "lucide-react";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Map from "@/components/Map";
+import MetricsCard from "@/components/MetricsCard";
+import RegionSelector from "@/components/RegionSelector";
+import TemperatureChart from "@/components/Charts/TemperatureChart";
+import ForestChart from "@/components/Charts/ForestChart";
+import { Thermometer, Wind, TreePine, Droplet, Fish, Heart, AlertCircle } from "lucide-react";
+import OceanChart from "@/components/Charts/OceanChart";
+import AirQualityGauge from "@/components/AirQualityGauge";
+import GlobalEvents from "@/components/GlobalEvents";
+import TimelineSelector from "@/components/TimelineSelector";
+import BiodiversityChart from "@/components/Charts/BiodiversityChart";
+import HealthIndexChart from "@/components/HealthIndexChart";
+import { useState, useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
+
+// Regional data
+const regionData = {
+  "global": {
+    temperature: { value: "15.6°C", trend: 0.8 },
+    airQuality: { value: "Good", aqi: 42, trend: -3 },
+    forestCoverage: { value: "31.2%", trend: -1.2 },
+    oceanHealth: { value: "72%", trend: -0.5 },
+    healthIndex: [
+      { date: "2018", value: 78 },
+      { date: "2019", value: 76 },
+      { date: "2020", value: 74 },
+      { date: "2021", value: 73 },
+      { date: "2022", value: 72 },
+      { date: "2023", value: 71 },
+      { date: "2024", value: 72 },
+    ],
+    biodiversity: {
+      mammals: "5,701",
+      birds: "10,932",
+      fish: "33,600",
+      endangered: "41,415",
+      mammalsTrend: -0.8,
+      birdsTrend: -0.5,
+      fishTrend: -1.2,
+      endangeredTrend: 2.1
+    }
+  },
+  "north-america": {
+    temperature: { value: "12.8°C", trend: 1.2 },
+    airQuality: { value: "Good", aqi: 35, trend: -5 },
+    forestCoverage: { value: "36.7%", trend: -0.9 },
+    oceanHealth: { value: "75%", trend: -0.3 },
+    healthIndex: [
+      { date: "2018", value: 81 },
+      { date: "2019", value: 80 },
+      { date: "2020", value: 79 },
+      { date: "2021", value: 78 },
+      { date: "2022", value: 77 },
+      { date: "2023", value: 76 },
+      { date: "2024", value: 75 },
+    ],
+    biodiversity: {
+      mammals: "965",
+      birds: "2,059",
+      fish: "4,200",
+      endangered: "1,662",
+      mammalsTrend: -0.5,
+      birdsTrend: -0.3,
+      fishTrend: -0.8,
+      endangeredTrend: 1.5
+    }
+  },
+  "south-america": {
+    temperature: { value: "17.3°C", trend: 0.7 },
+    airQuality: { value: "Moderate", aqi: 65, trend: 2 },
+    forestCoverage: { value: "47.2%", trend: -2.1 },
+    oceanHealth: { value: "76%", trend: -0.7 },
+    healthIndex: [
+      { date: "2018", value: 80 },
+      { date: "2019", value: 79 },
+      { date: "2020", value: 77 },
+      { date: "2021", value: 75 },
+      { date: "2022", value: 73 },
+      { date: "2023", value: 72 },
+      { date: "2024", value: 70 },
+    ],
+    biodiversity: {
+      mammals: "1,385",
+      birds: "3,751",
+      fish: "9,100",
+      endangered: "5,245",
+      mammalsTrend: -1.2,
+      birdsTrend: -0.8,
+      fishTrend: -2.0,
+      endangeredTrend: 3.2
+    }
+  },
+  "europe": {
+    temperature: { value: "10.9°C", trend: 1.0 },
+    airQuality: { value: "Good", aqi: 39, trend: -6 },
+    forestCoverage: { value: "45.3%", trend: 0.5 },
+    oceanHealth: { value: "78%", trend: -0.2 },
+    healthIndex: [
+      { date: "2018", value: 83 },
+      { date: "2019", value: 82 },
+      { date: "2020", value: 82 },
+      { date: "2021", value: 81 },
+      { date: "2022", value: 80 },
+      { date: "2023", value: 79 },
+      { date: "2024", value: 78 },
+    ],
+    biodiversity: {
+      mammals: "912",
+      birds: "1,154",
+      fish: "2,800",
+      endangered: "1,211",
+      mammalsTrend: -0.4,
+      birdsTrend: -0.2,
+      fishTrend: -0.6,
+      endangeredTrend: 1.2
+    }
+  },
+  "asia": {
+    temperature: { value: "16.8°C", trend: 1.3 },
+    airQuality: { value: "Unhealthy", aqi: 128, trend: 7 },
+    forestCoverage: { value: "28.1%", trend: -1.5 },
+    oceanHealth: { value: "68%", trend: -0.9 },
+    healthIndex: [
+      { date: "2018", value: 70 },
+      { date: "2019", value: 69 },
+      { date: "2020", value: 68 },
+      { date: "2021", value: 66 },
+      { date: "2022", value: 65 },
+      { date: "2023", value: 64 },
+      { date: "2024", value: 62 },
+    ],
+    biodiversity: {
+      mammals: "1,873",
+      birds: "2,894",
+      fish: "11,300",
+      endangered: "19,513",
+      mammalsTrend: -1.3,
+      birdsTrend: -0.9,
+      fishTrend: -1.8,
+      endangeredTrend: 3.4
+    }
+  },
+  "africa": {
+    temperature: { value: "24.2°C", trend: 0.9 },
+    airQuality: { value: "Moderate", aqi: 72, trend: 2 },
+    forestCoverage: { value: "21.4%", trend: -2.2 },
+    oceanHealth: { value: "71%", trend: -0.6 },
+    healthIndex: [
+      { date: "2018", value: 75 },
+      { date: "2019", value: 73 },
+      { date: "2020", value: 71 },
+      { date: "2021", value: 69 },
+      { date: "2022", value: 68 },
+      { date: "2023", value: 66 },
+      { date: "2024", value: 64 },
+    ],
+    biodiversity: {
+      mammals: "1,437",
+      birds: "2,355",
+      fish: "3,500",
+      endangered: "8,126",
+      mammalsTrend: -1.6,
+      birdsTrend: -1.0,
+      fishTrend: -1.5,
+      endangeredTrend: 2.8
+    }
+  },
+  "oceania": {
+    temperature: { value: "14.2°C", trend: 0.5 },
+    airQuality: { value: "Good", aqi: 32, trend: -4 },
+    forestCoverage: { value: "17.3%", trend: -0.4 },
+    oceanHealth: { value: "83%", trend: -0.1 },
+    healthIndex: [
+      { date: "2018", value: 85 },
+      { date: "2019", value: 84 },
+      { date: "2020", value: 84 },
+      { date: "2021", value: 84 },
+      { date: "2022", value: 83 },
+      { date: "2023", value: 83 },
+      { date: "2024", value: 82 },
+    ],
+    biodiversity: {
+      mammals: "416",
+      birds: "1,237",
+      fish: "4,100",
+      endangered: "1,843",
+      mammalsTrend: -0.3,
+      birdsTrend: -0.2,
+      fishTrend: -0.4,
+      endangeredTrend: 0.9
+    }
+  }
+};
 
 const Index = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2024);
@@ -8,8 +201,10 @@ const Index = () => {
   const [currentRegionData, setCurrentRegionData] = useState(regionData.global);
   
   useEffect(() => {
+    // Update current region data when region changes
     setCurrentRegionData(regionData[selectedRegion as keyof typeof regionData]);
     
+    // Show toast notification when region changes
     if (selectedRegion !== "global") {
       const regionName = selectedRegion.split('-').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
@@ -33,48 +228,6 @@ const Index = () => {
     console.log(`Region changed to ${region}`);
   };
   
-  const StatusDots = () => (
-    <div className="flex items-center gap-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>
-            <div className="flex items-center gap-1">
-              <CircleCheck className="h-4 w-4 text-green-500" />
-              <span className="text-xs">Stable</span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Indicators are within expected, healthy ranges</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger>
-            <div className="flex items-center gap-1">
-              <AlertCircle className="h-4 w-4 text-yellow-500" />
-              <span className="text-xs">Warning</span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Potential risks or declining trends detected</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <Tooltip>
-          <TooltipTrigger>
-            <div className="flex items-center gap-1">
-              <CircleX className="h-4 w-4 text-red-500" />
-              <span className="text-xs">Critical</span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Urgent environmental concerns requiring immediate action</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center">
@@ -125,7 +278,14 @@ const Index = () => {
           <TimelineSelector minYear={1980} maxYear={2024} onChange={handleTimelineChange} />
         </div>
         <div className="md:col-span-1 flex justify-end items-center">
-          <StatusDots />
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-red-500"></div>
+            <span className="text-xs">Critical</span>
+            <div className="h-3 w-3 rounded-full bg-yellow-500 ml-2"></div>
+            <span className="text-xs">Warning</span>
+            <div className="h-3 w-3 rounded-full bg-green-500 ml-2"></div>
+            <span className="text-xs">Stable</span>
+          </div>
         </div>
       </div>
 
