@@ -19,11 +19,12 @@ const regions = [
 
 interface RegionSelectorProps {
   onRegionChange: (region: string) => void;
+  selectedRegion: string;
 }
 
-const RegionSelector = ({ onRegionChange }: RegionSelectorProps) => {
+const RegionSelector = ({ onRegionChange, selectedRegion }: RegionSelectorProps) => {
   return (
-    <Select onValueChange={onRegionChange} defaultValue="global">
+    <Select onValueChange={onRegionChange} value={selectedRegion}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select Region" />
       </SelectTrigger>
