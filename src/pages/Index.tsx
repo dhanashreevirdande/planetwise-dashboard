@@ -15,6 +15,7 @@ import HealthIndexChart from "@/components/HealthIndexChart";
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 
+// Historical data for different years
 const historicalData = {
   // 1980 data
   1980: {
@@ -68,6 +69,7 @@ const historicalData = {
         endangeredTrend: 0.3
       }
     },
+    // Other regions for 1980
     "south-america": {
       temperature: { value: "16.1°C", trend: 0.3 },
       airQuality: { value: "Good", aqi: 40, trend: 0.5 },
@@ -194,6 +196,7 @@ const historicalData = {
       }
     }
   },
+  // 2000 data
   2000: {
     "global": {
       temperature: { value: "14.8°C", trend: 0.5 },
@@ -220,6 +223,7 @@ const historicalData = {
         endangeredTrend: 1.2
       }
     },
+    // Other regions for 2000...
     "north-america": {
       temperature: { value: "12.2°C", trend: 0.7 },
       airQuality: { value: "Good", aqi: 33, trend: -3 },
@@ -246,6 +250,7 @@ const historicalData = {
       }
     }
   },
+  // 2024 data (current)
   2024: {
     "global": {
       temperature: { value: "15.6°C", trend: 0.8 },
@@ -425,20 +430,25 @@ const historicalData = {
   }
 };
 
+// Create interpolated data for missing years
 const allYears = Array.from({ length: 2024 - 1980 + 1 }, (_, i) => 1980 + i);
 const regionData = {};
 
+// Populate all years with interpolated data
 allYears.forEach(year => {
   if (historicalData[year]) {
     regionData[year] = historicalData[year];
   } else {
+    // Find closest years with data
     const years = Object.keys(historicalData).map(Number);
     const prevYear = Math.max(...years.filter(y => y < year));
     const nextYear = Math.min(...years.filter(y => y > year));
     
+    // Simple linear interpolation
     regionData[year] = {};
     Object.keys(historicalData[prevYear]).forEach(region => {
       regionData[year][region] = JSON.parse(JSON.stringify(historicalData[prevYear][region]));
+      // We're just doing a simple copy for now - in a real app you'd interpolate values
     });
   }
 });
@@ -449,10 +459,25 @@ const Index = () => {
   const [currentRegionData, setCurrentRegionData] = useState(regionData[2024].global);
   
   useEffect(() => {
+    // Update current region data when region or year changes
     if (regionData[selectedYear] && regionData[selectedYear][selectedRegion]) {
       setCurrentRegionData(regionData[selectedYear][selectedRegion]);
     } else {
+      // Fallback to global/current if data is missing
       setCurrentRegionData(regionData[2024].global);
+    }
+    
+    // Show toast notification when region changes
+    if (selectedRegion !== "global") {
+      const regionName = selectedRegion.split('-').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+      
+      toast({
+        title: `Region: ${regionName}, Year: ${selectedYear}`,
+        description: "Dashboard data updated for selected region and year",
+        duration: 2000,
+      });
     }
   }, [selectedRegion, selectedYear]);
   
